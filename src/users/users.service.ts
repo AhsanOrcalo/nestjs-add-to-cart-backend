@@ -11,18 +11,30 @@ export class UsersService {
 
   constructor(private jwtService: JwtService) {}
 
-  async register(registerDto: RegisterDto): Promise<{ message: string; user: { id: string; userName: string } }> {
-    const { userName, password, confirmPassword } = registerDto;
+  async register(registerDto: RegisterDto): Promise<{ message: string; user: { id: string; userName: string; email: string; phoneNumber: string } }> {
+    const { userName, email, phoneNumber, password, confirmPassword } = registerDto;
 
     // Check if passwords match
     if (password !== confirmPassword) {
       throw new ConflictException('Passwords do not match');
     }
 
-    // Check if user already exists
-    const existingUser = this.users.find((u) => u.userName === userName);
-    if (existingUser) {
+    // Check if username already exists
+    const existingUserByUsername = this.users.find((u) => u.userName === userName);
+    if (existingUserByUsername) {
       throw new ConflictException('Username already exists');
+    }
+
+    // Check if email already exists
+    const existingUserByEmail = this.users.find((u) => u.email === email);
+    if (existingUserByEmail) {
+      throw new ConflictException('Email already exists');
+    }
+
+    // Check if phone number already exists
+    const existingUserByPhone = this.users.find((u) => u.phoneNumber === phoneNumber);
+    if (existingUserByPhone) {
+      throw new ConflictException('Phone number already exists');
     }
 
     // Hash password
@@ -33,6 +45,8 @@ export class UsersService {
     const newUser: User = {
       id: Date.now().toString(),
       userName,
+      email,
+      phoneNumber,
       password: hashedPassword,
       createdAt: new Date(),
     };
@@ -44,6 +58,8 @@ export class UsersService {
       user: {
         id: newUser.id,
         userName: newUser.userName,
+        email: newUser.email,
+        phoneNumber: newUser.phoneNumber,
       },
     };
   }

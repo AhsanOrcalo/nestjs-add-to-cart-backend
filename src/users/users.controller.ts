@@ -22,17 +22,19 @@ export class UsersController {
         user: {
           id: '1234567890',
           userName: 'john_doe',
+          email: 'john.doe@example.com',
+          phoneNumber: '+1234567890',
         },
       },
     },
   })
   @ApiResponse({
     status: 409,
-    description: 'Username already exists or passwords do not match',
+    description: 'Username, email, or phone number already exists, or passwords do not match',
     schema: {
       example: {
         statusCode: 409,
-        message: 'Username already exists',
+        message: 'Email already exists',
         error: 'Conflict',
       },
     },
