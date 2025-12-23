@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Put, Get, Param, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { PurchasesService } from './purchases.service';
@@ -88,6 +88,104 @@ export class PurchasesController {
   })
   async purchaseLead(@Request() req: any, @Param('leadId') leadId: string) {
     return this.purchasesService.purchaseLead(req.user.userId, leadId);
+  }
+
+  @Put('lead/:leadId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.USER)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update lead purchase status - Purchase a lead (User only)' })
+  @ApiParam({
+    name: 'leadId',
+    description: 'ID of the lead to purchase',
+    example: '1234567890',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lead purchased successfully and updated with purchase status',
+    schema: {
+      example: {
+        message: 'Lead purchased successfully',
+        lead: {
+          id: '1234567890',
+          firstName: 'John',
+          lastName: 'Doe',
+          price: 50000,
+          address: '123 Main Street',
+          state: 'California',
+          city: 'Los Angeles',
+          zip: '90001',
+          dob: '1990-01-15T00:00:00.000Z',
+          ssn: '123-45-6789',
+          email: 'john.doe@example.com',
+          createdAt: '2024-01-01T00:00:00.000Z',
+          isPurchased: true,
+        },
+        purchase: {
+          id: '1234567890',
+          userId: 'user123',
+          leadId: 'lead123',
+          purchasedAt: '2024-01-01T00:00:00.000Z',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User access required',
+    schema: {
+      example: {
+        statusCode: 403,
+        message: 'Insufficient permissions. Admin access required.',
+        error: 'Forbidden',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Lead not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Lead not found',
+        error: 'Not Found',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Lead already purchased by this user',
+    schema: {
+      example: {
+        statusCode: 409,
+        message: 'Lead already purchased by this user',
+        error: 'Conflict',
+      },
+    },
+  })
+  async updateLeadPurchase(@Request() req: any, @Param('leadId') leadId: string) {
+    const purchaseResult = await this.purchasesService.purchaseLead(req.user.userId, leadId);
+    const lead = await this.leadsService.getLeadById(leadId);
+    
+    return {
+      message: purchaseResult.message,
+      lead: {
+        ...lead,
+        isPurchased: true,
+      },
+      purchase: purchaseResult.purchase,
+    };
   }
 
   @Get()
