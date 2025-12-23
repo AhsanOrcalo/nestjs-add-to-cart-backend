@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, MinLength, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, MinLength, Min, IsEmail, Matches, IsDateString } from 'class-validator';
 
 export class AddLeadDto {
   @ApiProperty({
@@ -55,5 +55,41 @@ export class AddLeadDto {
   @IsNotEmpty()
   @MinLength(2, { message: 'City must be at least 2 characters long' })
   city: string;
+
+  @ApiProperty({
+    description: 'Zip code of the lead',
+    example: '90001',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d{5}(-\d{4})?$/, { message: 'Zip code must be in format 12345 or 12345-6789' })
+  zip: string;
+
+  @ApiProperty({
+    description: 'Date of birth of the lead',
+    example: '1990-01-15',
+    type: 'string',
+    format: 'date',
+  })
+  @IsDateString({}, { message: 'DOB must be a valid date in YYYY-MM-DD format' })
+  @IsNotEmpty()
+  dob: string;
+
+  @ApiProperty({
+    description: 'Social Security Number of the lead',
+    example: '123-45-6789',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d{3}-\d{2}-\d{4}$/, { message: 'SSN must be in format XXX-XX-XXXX' })
+  ssn: string;
+
+  @ApiProperty({
+    description: 'Email address of the lead',
+    example: 'john.doe@example.com',
+  })
+  @IsEmail({}, { message: 'Email must be a valid email address' })
+  @IsNotEmpty()
+  email: string;
 }
 

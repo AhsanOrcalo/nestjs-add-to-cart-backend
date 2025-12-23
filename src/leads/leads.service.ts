@@ -15,6 +15,10 @@ export class LeadsService {
       address: addLeadDto.address,
       state: addLeadDto.state,
       city: addLeadDto.city,
+      zip: addLeadDto.zip,
+      dob: new Date(addLeadDto.dob),
+      ssn: addLeadDto.ssn,
+      email: addLeadDto.email,
       createdAt: new Date(),
     };
 

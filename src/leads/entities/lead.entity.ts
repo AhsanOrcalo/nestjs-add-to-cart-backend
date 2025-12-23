@@ -6,6 +6,10 @@ export class Lead {
   address: string;
   state: string;
   city: string;
+  zip: string;
+  dob: Date;
+  ssn: string;
+  email: string;
   createdAt: Date;
 }
 
