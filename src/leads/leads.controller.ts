@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { LeadsService } from './leads.service';
@@ -6,11 +6,15 @@ import { AddLeadDto } from './dto/add-lead.dto';
 import { Roles } from '../users/decorators/roles.decorator';
 import { RolesGuard } from '../users/guards/roles.guard';
 import { Role } from '../users/enums/role.enum';
+import { PurchasesService } from '../purchases/purchases.service';
 
 @ApiTags('leads')
 @Controller('leads')
 export class LeadsController {
-  constructor(private readonly leadsService: LeadsService) {}
+  constructor(
+    private readonly leadsService: LeadsService,
+    private readonly purchasesService: PurchasesService,
+  ) {}
 
   @Post('add-lead')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -102,6 +106,7 @@ export class LeadsController {
           ssn: '123-45-6789',
           email: 'john.doe@example.com',
           createdAt: '2024-01-01T00:00:00.000Z',
+          isPurchased: false,
         },
         {
           id: '9876543210',
@@ -116,6 +121,7 @@ export class LeadsController {
           ssn: '987-65-4321',
           email: 'jane.smith@example.com',
           createdAt: '2024-01-02T00:00:00.000Z',
+          isPurchased: true,
         },
       ],
     },
@@ -141,8 +147,22 @@ export class LeadsController {
       },
     },
   })
-  async getAllLeads() {
-    return this.leadsService.getAllLeads();
+  async getAllLeads(@Request() req: any) {
+    const leads = await this.leadsService.getAllLeads();
+    const userId = req.user.userId;
+
+    // Add purchase status for each lead
+    const leadsWithPurchaseStatus = await Promise.all(
+      leads.map(async (lead) => {
+        const isPurchased = await this.purchasesService.isLeadPurchasedByUser(userId, lead.id);
+        return {
+          ...lead,
+          isPurchased,
+        };
+      }),
+    );
+
+    return leadsWithPurchaseStatus;
   }
 }
 

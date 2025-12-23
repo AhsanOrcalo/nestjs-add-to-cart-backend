@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { AddLeadDto } from './dto/add-lead.dto';
 import { Lead } from './entities/lead.entity';
 
@@ -32,6 +32,10 @@ export class LeadsService {
 
   async getAllLeads(): Promise<Lead[]> {
     return this.leads;
+  }
+
+  async getLeadById(leadId: string): Promise<Lead | undefined> {
+    return this.leads.find((l) => l.id === leadId);
   }
 }
 
