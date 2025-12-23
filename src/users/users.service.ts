@@ -168,5 +168,12 @@ export class UsersService implements OnModuleInit {
       message: 'Password changed successfully',
     };
   }
+
+  async getAllUsers(): Promise<{ id: string; userName: string; email: string; phoneNumber: string; role: Role; createdAt: Date }[]> {
+    // Return all users without password field, excluding admin users
+    return this.users
+      .filter((user) => user.role !== Role.ADMIN)
+      .map(({ password, ...user }) => user);
+  }
 }
 

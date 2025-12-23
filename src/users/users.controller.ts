@@ -1,10 +1,13 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { Roles } from './decorators/roles.decorator';
+import { RolesGuard } from './guards/roles.guard';
+import { Role } from './enums/role.enum';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -151,6 +154,60 @@ export class UsersController {
   })
   async changePassword(@Request() req: any, @Body() changePasswordDto: ChangePasswordDto) {
     return this.usersService.changePassword(req.user.userId, changePasswordDto);
+  }
+
+  @Get('users')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get all registered users (Admin only, excludes admin users)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all registered users (excluding admin users)',
+    schema: {
+      example: [
+        {
+          id: '1234567890',
+          userName: 'john_doe',
+          email: 'john.doe@example.com',
+          phoneNumber: '+1234567890',
+          role: 'user',
+          createdAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: '9876543210',
+          userName: 'jane_smith',
+          email: 'jane.smith@example.com',
+          phoneNumber: '+0987654321',
+          role: 'user',
+          createdAt: '2024-01-02T00:00:00.000Z',
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing token',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin access required',
+    schema: {
+      example: {
+        statusCode: 403,
+        message: 'Insufficient permissions. Admin access required.',
+        error: 'Forbidden',
+      },
+    },
+  })
+  async getAllUsers() {
+    return this.usersService.getAllUsers();
   }
 }
 
