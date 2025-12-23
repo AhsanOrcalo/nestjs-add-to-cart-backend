@@ -1,8 +1,10 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -97,6 +99,58 @@ export class UsersController {
   })
   async login(@Body() loginDto: LoginDto) {
     return this.usersService.login(loginDto);
+  }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    schema: {
+      example: {
+        message: 'Password changed successfully',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid token or old password is incorrect',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Old password is incorrect',
+        error: 'Unauthorized',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error or new password same as old password',
+    schema: {
+      example: {
+        statusCode: 400,
+        message: 'New password must be different from old password',
+        error: 'Bad Request',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'New password and confirm password do not match',
+    schema: {
+      example: {
+        statusCode: 409,
+        message: 'New password and confirm password do not match',
+        error: 'Conflict',
+      },
+    },
+  })
+  async changePassword(@Request() req: any, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.usersService.changePassword(req.user.userId, changePasswordDto);
   }
 }
 

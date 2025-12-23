@@ -1,8 +1,9 @@
-import { Injectable, ConflictException, UnauthorizedException, OnModuleInit } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, OnModuleInit, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { User } from './entities/user.entity';
 import { Role } from './enums/role.enum';
 
@@ -128,6 +129,44 @@ export class UsersService implements OnModuleInit {
 
   async findOneById(id: string): Promise<User | undefined> {
     return this.users.find((u) => u.id === id);
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
+    const { oldPassword, newPassword, confirmPassword } = changePasswordDto;
+
+    // Find user
+    const user = this.users.find((u) => u.id === userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify old password
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isOldPasswordValid) {
+      throw new UnauthorizedException('Old password is incorrect');
+    }
+
+    // Check if new password matches confirm password
+    if (newPassword !== confirmPassword) {
+      throw new ConflictException('New password and confirm password do not match');
+    }
+
+    // Check if new password is different from old password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException('New password must be different from old password');
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user password
+    user.password = hashedPassword;
+
+    return {
+      message: 'Password changed successfully',
+    };
   }
 }
 
