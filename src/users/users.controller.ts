@@ -24,6 +24,7 @@ export class UsersController {
           userName: 'john_doe',
           email: 'john.doe@example.com',
           phoneNumber: '+1234567890',
+          role: 'user',
         },
       },
     },
@@ -67,6 +68,7 @@ export class UsersController {
         user: {
           id: '1234567890',
           userName: 'john_doe',
+          role: 'user',
         },
       },
     },
