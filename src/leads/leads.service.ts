@@ -1,5 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { AddLeadDto } from './dto/add-lead.dto';
+import { FilterLeadsDto } from './dto/filter-leads.dto';
 import { Lead } from './entities/lead.entity';
 
 @Injectable()
@@ -30,8 +31,60 @@ export class LeadsService {
     };
   }
 
-  async getAllLeads(): Promise<Lead[]> {
-    return this.leads;
+  async getAllLeads(filters?: FilterLeadsDto): Promise<Lead[]> {
+    let filteredLeads = [...this.leads];
+
+    if (filters) {
+      // Filter by name (searches in firstName and lastName)
+      if (filters.name) {
+        const nameLower = filters.name.toLowerCase();
+        filteredLeads = filteredLeads.filter(
+          (lead) =>
+            lead.firstName.toLowerCase().includes(nameLower) ||
+            lead.lastName.toLowerCase().includes(nameLower),
+        );
+      }
+
+      // Filter by city
+      if (filters.city) {
+        const cityLower = filters.city.toLowerCase();
+        filteredLeads = filteredLeads.filter((lead) =>
+          lead.city.toLowerCase().includes(cityLower),
+        );
+      }
+
+      // Filter by date of birth range
+      if (filters.dobFrom || filters.dobTo) {
+        filteredLeads = filteredLeads.filter((lead) => {
+          const leadYear = lead.dob.getFullYear();
+          if (filters.dobFrom && filters.dobTo) {
+            return leadYear >= filters.dobFrom && leadYear <= filters.dobTo;
+          } else if (filters.dobFrom) {
+            return leadYear >= filters.dobFrom;
+          } else if (filters.dobTo) {
+            return leadYear <= filters.dobTo;
+          }
+          return true;
+        });
+      }
+
+      // Filter by zip code
+      if (filters.zip) {
+        filteredLeads = filteredLeads.filter((lead) =>
+          lead.zip.includes(filters.zip!),
+        );
+      }
+
+      // Filter by state
+      if (filters.state) {
+        const stateLower = filters.state.toLowerCase();
+        filteredLeads = filteredLeads.filter((lead) =>
+          lead.state.toLowerCase().includes(stateLower),
+        );
+      }
+    }
+
+    return filteredLeads;
   }
 
   async getLeadById(leadId: string): Promise<Lead | undefined> {

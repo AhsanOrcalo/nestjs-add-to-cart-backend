@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Request, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { LeadsService } from './leads.service';
 import { AddLeadDto } from './dto/add-lead.dto';
+import { FilterLeadsDto } from './dto/filter-leads.dto';
 import { Roles } from '../users/decorators/roles.decorator';
 import { RolesGuard } from '../users/guards/roles.guard';
 import { Role } from '../users/enums/role.enum';
@@ -87,10 +88,16 @@ export class LeadsController {
   @Roles(Role.ADMIN, Role.USER)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get all leads (Admin and User access)' })
+  @ApiOperation({ summary: 'Get all leads with optional filters (Admin and User access)' })
+  @ApiQuery({ name: 'name', required: false, type: String, description: 'Search by name (searches in first name and last name)' })
+  @ApiQuery({ name: 'city', required: false, type: String, description: 'Filter by city' })
+  @ApiQuery({ name: 'dobFrom', required: false, type: Number, description: 'Filter by date of birth from year (e.g., 1970)' })
+  @ApiQuery({ name: 'dobTo', required: false, type: Number, description: 'Filter by date of birth to year (e.g., 2000)' })
+  @ApiQuery({ name: 'zip', required: false, type: String, description: 'Filter by zip code' })
+  @ApiQuery({ name: 'state', required: false, type: String, description: 'Filter by state' })
   @ApiResponse({
     status: 200,
-    description: 'List of all leads',
+    description: 'List of filtered leads',
     schema: {
       example: [
         {
@@ -147,8 +154,8 @@ export class LeadsController {
       },
     },
   })
-  async getAllLeads(@Request() req: any) {
-    const leads = await this.leadsService.getAllLeads();
+  async getAllLeads(@Request() req: any, @Query() filterDto: FilterLeadsDto) {
+    const leads = await this.leadsService.getAllLeads(filterDto);
     const userId = req.user.userId;
 
     // Add purchase status for each lead
