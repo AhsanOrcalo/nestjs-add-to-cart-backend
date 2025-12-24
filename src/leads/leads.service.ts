@@ -82,6 +82,26 @@ export class LeadsService {
           lead.state.toLowerCase().includes(stateLower),
         );
       }
+
+      // Filter by score
+      if (filters.scoreFilter) {
+        const minScore = filters.scoreFilter === '700+' ? 700 : 800;
+        filteredLeads = filteredLeads.filter((lead) => {
+          // Only include leads that have a score and meet the minimum
+          return lead.score !== undefined && lead.score >= minScore;
+        });
+      }
+    }
+
+    // Sort by price (applied after filtering)
+    if (filters?.priceSort) {
+      filteredLeads.sort((a, b) => {
+        if (filters.priceSort === 'high-to-low') {
+          return b.price - a.price; // Descending order
+        } else {
+          return a.price - b.price; // Ascending order
+        }
+      });
     }
 
     return filteredLeads;

@@ -10,6 +10,7 @@ export class Lead {
   dob: Date;
   ssn: string;
   email: string;
+  score?: number;
   createdAt: Date;
 }
 

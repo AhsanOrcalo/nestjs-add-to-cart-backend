@@ -95,6 +95,8 @@ export class LeadsController {
   @ApiQuery({ name: 'dobTo', required: false, type: Number, description: 'Filter by date of birth to year (e.g., 2000)' })
   @ApiQuery({ name: 'zip', required: false, type: String, description: 'Filter by zip code' })
   @ApiQuery({ name: 'state', required: false, type: String, description: 'Filter by state' })
+  @ApiQuery({ name: 'priceSort', required: false, type: String, enum: ['high-to-low', 'low-to-high'], description: 'Sort by price: "high-to-low" or "low-to-high"' })
+  @ApiQuery({ name: 'scoreFilter', required: false, type: String, enum: ['700+', '800+'], description: 'Filter by score: "700+" or "800+"' })
   @ApiResponse({
     status: 200,
     description: 'List of filtered leads',

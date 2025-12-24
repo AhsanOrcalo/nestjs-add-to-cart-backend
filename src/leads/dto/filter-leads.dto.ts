@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, Max, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class FilterLeadsDto {
@@ -64,5 +64,27 @@ export class FilterLeadsDto {
   @IsString()
   @IsOptional()
   state?: string;
+
+  @ApiProperty({
+    description: 'Sort by price: "high-to-low" or "low-to-high"',
+    example: 'high-to-low',
+    required: false,
+    enum: ['high-to-low', 'low-to-high'],
+  })
+  @IsString()
+  @IsIn(['high-to-low', 'low-to-high'])
+  @IsOptional()
+  priceSort?: 'high-to-low' | 'low-to-high';
+
+  @ApiProperty({
+    description: 'Filter by score: "700+" or "800+"',
+    example: '700+',
+    required: false,
+    enum: ['700+', '800+'],
+  })
+  @IsString()
+  @IsIn(['700+', '800+'])
+  @IsOptional()
+  scoreFilter?: '700+' | '800+';
 }
 
